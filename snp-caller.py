@@ -12,7 +12,7 @@ snpRate     = 0.001
 ratioTiTv   = 2
 bases       = {'A','C','G','T'}
 
-numThreads = 4
+numThreads  = 4
 linesToRead = 1000
 
 pileupBases = bases.union({',','.'})
