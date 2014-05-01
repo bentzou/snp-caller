@@ -18,10 +18,15 @@ linesToRead = 1000
 pileupBases = bases.union({',','.'})
 
 
-# builds dictionary of dictionary for priors
-# {refbase: {read base: prior probability}}
+
 def buildSimplePriorsDict(snpRate, ratioTiTv):
-    bases = ['A','T','G','C']
+    '''
+    Builds dictionary of dictionary of prior probabilities,
+    given SNP rate and transition/transversion ratio
+
+    {refbase: {read base: prior probability}}
+    '''
+
     priors = {}
     for base1 in bases:
         priors[base1] = {}
@@ -29,27 +34,29 @@ def buildSimplePriorsDict(snpRate, ratioTiTv):
             if base1 == base2:
                 priors[base1][base2] = 1 - snpRate
             else:
-                baseLst = [base1,base2]
-                baseLst.sort()
+                baseLst = sorted([base1,base2])
                 if baseLst == ['A','G'] or baseLst == ['C','T']: # transition
                     priors[base1][base2] = snpRate * ratioTiTv / (ratioTiTv + 1)
                 else:
                     priors[base1][base2] = snpRate / (ratioTiTv + 1) / 2
     return priors
 
+
 def calculateErrorProbs():
+    '''
+    Builds dictionary of error probabilities from possible Phred scores
+    '''
+
     errorProbs = {}
     for i in range(33,74):
         errorProbs[chr(i)] = 10 ** ((33-i) / 10.)
     return errorProbs
 
 
-errorProbs  = calculateErrorProbs()
-priors      = buildSimplePriorsDict(snpRate, ratioTiTv)
-
-
-# this function calls the SNP for a single line of pileup and is passed to map
 def process(line):
+    '''
+    Calls the SNP for a single line of pileup
+    '''
 
     data = line.split()
 
@@ -111,7 +118,12 @@ def process(line):
         return '\t'.join([data[0],data[1],'.',refbase,call,str(phred),'\n'])
 
 
-# business end
+'''
+Business end for processing pileup data
+'''
+errorProbs  = calculateErrorProbs()
+priors      = buildSimplePriorsDict(snpRate, ratioTiTv)
+
 with open(fileprefix+'.vcf','w') as output:
     output.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\n')
 
