@@ -118,28 +118,32 @@ def process(line):
         return '\t'.join([data[0],data[1],'.',refbase,call,str(phred),'\n'])
 
 
-'''
-Business end for processing pileup data
-'''
-errorProbs  = calculateErrorProbs()
-priors      = buildSimplePriorsDict(snpRate, ratioTiTv)
+def processPileup():
+    '''
+    Processes pileup data line by line and outputs a .vcf file
+    '''
 
-with open(fileprefix+'.vcf','w') as output:
-    output.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\n')
+    errorProbs  = calculateErrorProbs()
+    priors      = buildSimplePriorsDict(snpRate, ratioTiTv)
 
-    queue = []
-    pool = Pool(processes=numThreads)
+    with open(fileprefix+'.vcf','w') as output:
+        output.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\n')
 
-    for line in fileinput.input():
-        if len(queue) < linesToRead:
-            queue.append(line)
-        else:
-            result = pool.map(process,queue)
-            for item in result:
-                if item:
-                    output.write(item)
-            queue = []
+        queue = []
+        pool = Pool(processes=numThreads)
 
-    for item in pool.map(process,queue):
-        if item:
-            output.write(item)
+        for line in fileinput.input():
+            if len(queue) < linesToRead:
+                queue.append(line)
+            else:
+                result = pool.map(process,queue)
+                for item in result:
+                    if item:
+                        output.write(item)
+                queue = []
+
+        for item in pool.map(process,queue):
+            if item:
+                output.write(item)
+
+processPileup()
